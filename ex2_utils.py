@@ -10,8 +10,11 @@ def conv1D(in_signal: np.ndarray, k_size: np.ndarray) -> np.ndarray:
     :param k_size: 1-D array as a kernel
     :return: The convolved array
     """
-
-    return
+    in_signal_new = np.append(np.zeros(k_size.size - 1), np.append(in_signal, np.zeros(k_size.size - 1)))
+    new_vector = np.zeros(in_signal.size + k_size.size - 1)  # make new vector with this new size
+    for i in range(new_vector.size):
+        new_vector[i] = np.dot(in_signal_new[i: i + k_size.size], k_size[::-1])
+    return new_vector
 
 
 def conv2D(in_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
@@ -21,8 +24,13 @@ def conv2D(in_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     :param kernel: A kernel
     :return: The convolved image
     """
-
-    return
+    new_image = np.pad(in_image, (np.flip(kernel).shape[0] // 2, np.flip(kernel).shape[1] // 2), 'edge')
+    new_vector = np.zeros(in_image.shape[0], in_image.shape[1])
+    for x in range(in_image.shape[0]):
+        for y in range(in_image.shape[1]):
+            new_vector[x, y] = np.dot((new_image[x:x + np.flip(kernel).shape[0], y:y + np.flip(kernel).shape[1]]),
+                                      np.flip(kernel)).sum()
+    return new_vector
 
 
 def convDerivative(in_image: np.ndarray) -> (np.ndarray, np.ndarray):
