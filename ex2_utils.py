@@ -68,8 +68,8 @@ def blurImage2(in_image: np.ndarray, k_size: int) -> np.ndarray:
     :param k_size: Kernel size
     :return: The Blurred image
     """
-
-    return
+    kernel = cv2.getGaussianKernel(k_size, int(0.3 * ((k_size - 1) * 0.5 - 1) + 0.8))
+    return cv2.filter2D(in_image, -1, kernel, borderType=cv2.BORDER_REPLICATE)
 
 
 def edgeDetectionZeroCrossingSimple(img: np.ndarray) -> np.ndarray:
