@@ -39,8 +39,10 @@ def convDerivative(in_image: np.ndarray) -> (np.ndarray, np.ndarray):
     :param in_image: Grayscale iamge
     :return: (directions, magnitude)
     """
-
-    return
+    kernel = np.array([[0, 0, 0], [-1, 0, 1], [0, 0, 0]])
+    x = conv2D(in_image, kernel)
+    y = conv2D(in_image, kernel.transpose())
+    return np.arctan(y, x), np.sqrt(np.square(x) + np.square(y))
 
 
 def blurImage1(in_image: np.ndarray, k_size: int) -> np.ndarray:
@@ -50,8 +52,13 @@ def blurImage1(in_image: np.ndarray, k_size: int) -> np.ndarray:
     :param k_size: Kernel size
     :return: The Blurred image
     """
-
-    return
+    sigma = 0.3 * ((k_size - 1) * 0.5 - 1) + 0.8
+    kernel = np.zeros((k_size // 2, k_size // 2))
+    for i in range(k_size // 2):
+        for j in range(k_size // 2):
+            kernel[i, j] = np.exp(-((i - k_size // 2) ** 2 + (j - k_size // 2) ** 2) / (2 * sigma ** 2)) / (
+                    2 * np.pi * sigma ** 2)
+    return conv2D(in_image, kernel)
 
 
 def blurImage2(in_image: np.ndarray, k_size: int) -> np.ndarray:
