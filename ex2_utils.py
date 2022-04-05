@@ -78,7 +78,6 @@ def edgeDetectionZeroCrossingSimple(img: np.ndarray) -> np.ndarray:
     :param img: Input image
     :return: opencv solution, my implementation
     """
-
     return
 
 
@@ -88,8 +87,32 @@ def edgeDetectionZeroCrossingLOG(img: np.ndarray) -> np.ndarray:
     :param img: Input image
     :return: opencv solution, my implementation
     """
+    smooth = cv2.GaussianBlur(img, (5, 5), 1)
+    laplacian = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
+    img_laplacian = cv2.filter2D(smooth, -1, laplacian, borderType=cv2.BORDER_REPLICATE)
+    img_c = zero_cross_detection(img_laplacian)
+    return img_c
 
-    return
+
+def zero_cross_detection(in_image: np.ndarray) -> np.ndarray:
+    """
+    perform a 8 neighbour zero crossing, which implies that we shall mark the current pixel as 1,
+    if the sign of intensity value corresponding to any of the 8 neighbors of current pixel is
+    opposite of the sign of current pixel.
+    We shall iterate over each pixel in the image and mark all such zero crossings.
+    :param in_image:
+    :return: zero cross - binary image
+    """
+    img_c = np.zeros(in_image.shape)
+    for i in range(0, in_image.shape[0] - 1):
+        for j in range(0, in_image.shape[1] - 1):
+            if in_image[i][j] > 0:
+                if in_image[i + 1][j] < 0 or in_image[i + 1][j + 1] < 0 or in_image[i][j + 1] < 0:
+                    img_c[i, j] = 1
+            elif in_image[i][j] < 0:
+                if in_image[i + 1][j] > 0 or in_image[i + 1][j + 1] > 0 or in_image[i][j + 1] > 0:
+                    img_c[i, j] = 1
+    return img_c
 
 
 def houghCircle(img: np.ndarray, min_radius: int, max_radius: int) -> list:
