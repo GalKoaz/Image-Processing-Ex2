@@ -51,23 +51,23 @@ def houghDemo():
     min_r, max_r = 50, 100
 
     st = time.time()
-    cv2_cir = cv2.HoughCircles((img * 255).astype(np.uint8), cv2.HOUGH_GRADIENT, 1, minDist=30, param1=500,
-                               param2=80,
-                               minRadius=min_r, maxRadius=max_r)
-    print("Hough Time[CV]: {:.3f} sec".format(time.time() - st))
+    # cv2_cir = cv2.HoughCircles((img * 255).astype(np.uint8), cv2.HOUGH_GRADIENT, 1, minDist=30, param1=500,
+    #                            param2=80,
+    #                            minRadius=min_r, maxRadius=max_r)
+    # print("Hough Time[CV]: {:.3f} sec".format(time.time() - st))
 
     st = time.time()
     hough_rings = houghCircle(img, min_r, max_r)
     print("Hough Time[Mine]: {:.3f} sec".format(time.time() - st))
-
+    print(hough_rings)
     fig, ax = plt.subplots()
     ax.imshow(img, cmap='gray')
     for c in hough_rings:
         circle1 = plt.Circle((c[0], c[1]), c[2], color='r', fill=False, linewidth=3)
         ax.add_artist(circle1)
-    for c in cv2_cir[0]:
-        circle1 = plt.Circle((c[0], c[1]), c[2], color='g', fill=False, linewidth=2)
-        ax.add_artist(circle1)
+    # for c in cv2_cir[0]:
+    #     circle1 = plt.Circle((c[0], c[1]), c[2], color='g', fill=False, linewidth=2)
+    #     ax.add_artist(circle1)
     plt.show()
 
 
@@ -138,13 +138,13 @@ def biliteralFilterDemo():
 
 
 def main():
-    conv1Demo()
-    conv2Demo()
-    derivDemo()
-    blurDemo()
-    edgeDemo()
+    conv1Demo()  # Works
+    conv2Demo()  # Works
+    derivDemo()  # Works
+    blurDemo()  # Works
+    edgeDemo()  # Works
     houghDemo()
-    biliteralFilterDemo()
+    biliteralFilterDemo()  # Works but need fix like open cv
 
 
 if __name__ == '__main__':

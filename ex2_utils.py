@@ -24,13 +24,13 @@ def conv2D(in_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     :param kernel: A kernel
     :return: The convolved image
     """
-    new_image = np.pad(in_image, (np.flip(kernel).shape[0] // 2, np.flip(kernel).shape[1] // 2), 'edge')
-    new_vector = np.zeros(in_image.shape[0], in_image.shape[1])
-    for x in range(in_image.shape[0]):
-        for y in range(in_image.shape[1]):
-            new_vector[x, y] = np.dot((new_image[x:x + np.flip(kernel).shape[0], y:y + np.flip(kernel).shape[1]]),
-                                      np.flip(kernel)).sum()
-    return new_vector
+    image_padded = np.pad(in_image, ((np.flip(kernel)).shape[0] // 2, (np.flip(kernel)).shape[1] // 2), 'edge')
+    output = np.zeros((in_image.shape[0], in_image.shape[1]))
+    for y in range(in_image.shape[0]):
+        for x in range(in_image.shape[1]):
+            output[y, x] = (image_padded[y:y + (np.flip(kernel)).shape[0], x:x + (np.flip(kernel)).shape[1]] * np.flip(
+                kernel)).sum()
+    return output
 
 
 def convDerivative(in_image: np.ndarray) -> (np.ndarray, np.ndarray):
@@ -138,5 +138,31 @@ def bilateral_filter_implement(in_image: np.ndarray, k_size: int, sigma_color: f
     :param sigma_space: represents the filter sigma in the coordinate.
     :return: OpenCV implementation, my implementation
     """
+    open_cv = cv2.bilateralFilter(in_image, k_size, sigma_color, sigma_space, cv2.BORDER_DEFAULT)
+    in_image = in_image / 255
+    in_image = in_image.astype("float32")
+    img2 = np.zeros(in_image.shape)
+    gaussKer = cv2.getGaussianKernel(k_size, sigma_color)
+    sizeX, sizeY = in_image.shape
+    for i in range(k_size // 2, sizeX - k_size // 2):
+        for j in range(k_size // 2, sizeY - k_size // 2):
+            imgS = in_image[i - (k_size // 2): i + (k_size // 2) + 1, j - (k_size // 2): j + (k_size // 2) + 1]
+            imgI = imgS - imgS[k_size // 2, k_size // 2]
+            imgIG = (1 / (math.sqrt(sigma_space) * math.sqrt(2 * math.pi))) * np.exp(
+                -((imgI / math.sqrt(sigma_space)) ** 2) * 0.5)
+            weights = np.multiply(gaussKer, imgIG)
+            vals = np.multiply(imgS, weights)
+            val = np.sum(vals) / np.sum(weights)
+            img2[i, j] = val
+    img2 = img2 * 255
+    img2 = np.uint8(img2)
+    return open_cv, img2
 
-    return
+
+def main():
+    img = cv2.imread('input/coins.jpg', 0)
+    cv2.imshow(img)
+
+
+if __name__ == "__main__":
+    main()
