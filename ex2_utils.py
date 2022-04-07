@@ -125,8 +125,32 @@ def houghCircle(img: np.ndarray, min_radius: int, max_radius: int) -> list:
     :return: A list containing the detected circles,
                 [(x,y,radius),(x,y,radius),...]
     """
+    img *= 255
+    imgCanny = cv2.Canny(img.astype(np.uint8), 100, 200)
+    hough_circle = np.zeros((imgCanny.shape[0], imgCanny.shape[1], max_radius - min_radius))
+    direction = np.arctan2(cv2.Sobel(img, -1, 0, 1), cv2.Sobel(img, -1, 1, 0))
 
-    return
+    for j in range(0, imgCanny.shape[1]):
+        for i in range(0, imgCanny.shape[0]):
+            for r in range(hough_circle.shape[2], hough_circle.shape[2] + min_radius):
+                if imgCanny[i, j] != 0:
+                    try:
+                        rad = r
+                        hough_circle[
+                            int(j + rad * np.cos(direction[i, j])), int(
+                                i + rad * np.sin(direction[i, j])), r - min_radius] += 1
+                        hough_circle[
+                            int(j - rad * np.cos(direction[i, j])), int(
+                                i - rad * np.sin(direction[i, j])), r - min_radius] += 1
+                    except IndexError as e:
+                        pass
+    lst = []
+    for r in range(hough_circle.shape[2]):
+        for x in range(0, img.shape[0]):
+            for y in range(0, img.shape[1]):
+                if hough_circle[x, y, r] > 23:
+                    lst.append((x, y, min_radius + r))
+    return lst
 
 
 def bilateral_filter_implement(in_image: np.ndarray, k_size: int, sigma_color: float, sigma_space: float) -> (
