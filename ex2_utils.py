@@ -3,6 +3,12 @@ import numpy as np
 import cv2
 
 
+# ----------------------------------------------------------------------------
+# Created By : Gal Koaz
+# Created Date : 24-04-2022
+# Python version : '3.8'
+# ---------------------------------------------------------------------------
+
 def conv1D(in_signal: np.ndarray, k_size: np.ndarray) -> np.ndarray:
     """
     Convolve a 1-D array with a given kernel
@@ -10,8 +16,15 @@ def conv1D(in_signal: np.ndarray, k_size: np.ndarray) -> np.ndarray:
     :param k_size: 1-D array as a kernel
     :return: The convolved array
     """
+    """
+    We Created a new signal with the zero array of k_size - 1 and signal , zero array with k_size - 1
+    In addition we make a new vector with zero array of that size of both signal and k_size
+    for each i in the vector size we add to the place i the product of the new signal of i + size 
+    and the last element k_size of the array,
+    :return: new_vector for the conv1D function.
+    """
     in_signal_new = np.append(np.zeros(k_size.size - 1), np.append(in_signal, np.zeros(k_size.size - 1)))
-    new_vector = np.zeros(in_signal.size + k_size.size - 1)  # make new vector with this new size
+    new_vector = np.zeros(in_signal.size + k_size.size - 1)
     for i in range(new_vector.size):
         new_vector[i] = np.dot(in_signal_new[i: i + k_size.size], k_size[::-1])
     return new_vector
@@ -23,6 +36,13 @@ def conv2D(in_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     :param in_image: 2D image
     :param kernel: A kernel
     :return: The convolved image
+    """
+    """
+    First we created a pad: numpy.pad() function is used to pad the Numpy arrays. Sometimes there is a need to 
+    perform padding in Numpy arrays, then numPy.pad() function is used. The function returns the padded array of rank 
+    equal to the given array and the shape will increase according to pad_width. and created a new array of zeros 
+    with the size of the in_image dimensions, for y and x in the in_image we insert to the output array the x of the 
+    flip kernel + y and the x of the flip kernel multiply the flip of the kernel all together with the sum. 
     """
     image_padded = np.pad(in_image, ((np.flip(kernel)).shape[0] // 2, (np.flip(kernel)).shape[1] // 2), 'edge')
     output = np.zeros((in_image.shape[0], in_image.shape[1]))
@@ -39,6 +59,10 @@ def convDerivative(in_image: np.ndarray) -> (np.ndarray, np.ndarray):
     :param in_image: Grayscale iamge
     :return: (directions, magnitude)
     """
+    """
+    We used the kernel [[0, 0, 0], [-1, 0, 1], [0, 0, 0]], with the x of this kernel and the transpose of y,
+    we return the artan of y,x and the sqrt of squares x + squares y
+    """
     kernel = np.array([[0, 0, 0], [-1, 0, 1], [0, 0, 0]])
     x = conv2D(in_image, kernel)
     y = conv2D(in_image, kernel.transpose())
@@ -52,11 +76,16 @@ def blurImage1(in_image: np.ndarray, k_size: int) -> np.ndarray:
     :param k_size: Kernel size
     :return: The Blurred image
     """
+    """First we use the sigma calculation of 0.3 * ((k_size - 1) * 0.5 - 1) + 0.8 we made a new kernel of array zeros 
+    with the size x,y -> k_size // 2 we loop over the x,y in the range of k_size // 2 both, and we update in every 
+    kernel x,y the exp of -((x - k_size // 2) ** 2 + (y - k_size // 2) ** 2) / (2 * sigma ** 2)) / ( 2 * np.pi * 
+    sigma ** 2), and return the conv2D with the in_image and the new kernel we made.
+    """
     sigma = 0.3 * ((k_size - 1) * 0.5 - 1) + 0.8
     kernel = np.zeros((k_size // 2, k_size // 2))
-    for i in range(k_size // 2):
-        for j in range(k_size // 2):
-            kernel[i, j] = np.exp(-((i - k_size // 2) ** 2 + (j - k_size // 2) ** 2) / (2 * sigma ** 2)) / (
+    for x in range(k_size // 2):
+        for y in range(k_size // 2):
+            kernel[x, y] = np.exp(-((x - k_size // 2) ** 2 + (y - k_size // 2) ** 2) / (2 * sigma ** 2)) / (
                     2 * np.pi * sigma ** 2)
     return conv2D(in_image, kernel)
 
@@ -67,6 +96,10 @@ def blurImage2(in_image: np.ndarray, k_size: int) -> np.ndarray:
     :param in_image: Input image
     :param k_size: Kernel size
     :return: The Blurred image
+    """
+    """
+    we made a new kernel with of the cv2 GaussianKernel of the k_size and the sigma formula,
+    then we return the cv2 filter2D with the in_image and the kernel we made.
     """
     kernel = cv2.getGaussianKernel(k_size, int(0.3 * ((k_size - 1) * 0.5 - 1) + 0.8))
     return cv2.filter2D(in_image, -1, kernel, borderType=cv2.BORDER_REPLICATE)
@@ -86,6 +119,10 @@ def edgeDetectionZeroCrossingLOG(img: np.ndarray) -> np.ndarray:
     Detecting edges usint "ZeroCrossingLOG" method
     :param img: Input image
     :return: opencv solution, my implementation
+    """
+    """we use cv2 GaussianBlur to make the image smooth, then we used the laplacian kernel, we apply the cv2 filter2D 
+    with the smooth and the laplacian kernel then we used the helper function of zero_cross_detection
+    then we return the img_c with edgeDetectionZeroCrossingLOG as we required.
     """
     smooth = cv2.GaussianBlur(img, (5, 5), 1)
     laplacian = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
@@ -125,30 +162,34 @@ def houghCircle(img: np.ndarray, min_radius: int, max_radius: int) -> list:
     :return: A list containing the detected circles,
                 [(x,y,radius),(x,y,radius),...]
     """
+    """
+    First we multiply the image with 255 to get the original image, after we use the cv2 canny, we crated a new 
+    array with zeros of the 3d dimensions of imgCanny x, imgCanny y, and the abs value of the max radius - min radius 
+    we created a direction of the arctan with angel of sobel of -1,0,1 and the -1,1,0 of the img with the y/x, 
+    we over each pixel in the image to detected a potential circles and every pixel x,y we over of the range of the 
+    radius, to make sure we dont miss any circle in the image, after that if we detected a good circle we add him to 
+    the array we have created, and in the last we create a new lst we need to return, when we over the circle list 
+    and choose the circles we threshold of 23 means that we do not need multiply circles and we return the list of
+    x,y and radius of the circle.
+    """
     img *= 255
     imgCanny = cv2.Canny(img.astype(np.uint8), 100, 200)
-    hough_circle = np.zeros((imgCanny.shape[0], imgCanny.shape[1], max_radius - min_radius))
-    direction = np.arctan2(cv2.Sobel(img, -1, 0, 1), cv2.Sobel(img, -1, 1, 0))
-
+    h_c = np.zeros((imgCanny.shape[0], imgCanny.shape[1], max_radius - min_radius))
+    d = np.arctan2(cv2.Sobel(img, -1, 0, 1), cv2.Sobel(img, -1, 1, 0))
     for j in range(0, imgCanny.shape[1]):
         for i in range(0, imgCanny.shape[0]):
-            for r in range(hough_circle.shape[2], hough_circle.shape[2] + min_radius):
+            for r in range(h_c.shape[2], h_c.shape[2] + min_radius):
                 if imgCanny[i, j] != 0:
                     try:
-                        rad = r
-                        hough_circle[
-                            int(j + rad * np.cos(direction[i, j])), int(
-                                i + rad * np.sin(direction[i, j])), r - min_radius] += 1
-                        hough_circle[
-                            int(j - rad * np.cos(direction[i, j])), int(
-                                i - rad * np.sin(direction[i, j])), r - min_radius] += 1
+                        h_c[int(j + r * np.cos(d[i, j])), int(i + r * np.sin(d[i, j])), r - min_radius] += 1
+                        h_c[int(j - r * np.cos(d[i, j])), int(i - r * np.sin(d[i, j])), r - min_radius] += 1
                     except IndexError as e:
                         pass
     lst = []
-    for r in range(hough_circle.shape[2]):
+    for r in range(h_c.shape[2]):
         for x in range(0, img.shape[0]):
             for y in range(0, img.shape[1]):
-                if hough_circle[x, y, r] > 23:
+                if h_c[x, y, r] > 23:
                     lst.append((x, y, min_radius + r))
     return lst
 
@@ -161,6 +202,15 @@ def bilateral_filter_implement(in_image: np.ndarray, k_size: int, sigma_color: f
     :param sigma_color: represents the filter sigma in the color space.
     :param sigma_space: represents the filter sigma in the coordinate.
     :return: OpenCV implementation, my implementation
+    """
+    """
+    First, we divide the image by 255 and then we make the each pixel to be float32, we create new zero array of 
+    the in_image dimension , we used the GaussianKernel with the k_size and the sigma color, we saved the dimensions 
+    of the in_image. we over the x and y of the image when the range is k_size // 2 and dimension x - dimension y // 
+    2 in each x and y we save the element in x + k_size // 2 + 1, y + k_size // 2 + 1, then we used this array - the 
+    place of the x,y -> k_size // 2 then we used the sigma calculated to each element we multiply the weights of the 
+    gauss kernel and the array we calculated then we sum the values divide the weights then we multiply back with 255
+    then change the elements to uint8 and return the image as we required.
     """
     open_cv = cv2.bilateralFilter(in_image, k_size, sigma_color, sigma_space, cv2.BORDER_DEFAULT)
     in_image = in_image / 255
@@ -181,12 +231,3 @@ def bilateral_filter_implement(in_image: np.ndarray, k_size: int, sigma_color: f
     img2 = img2 * 255
     img2 = np.uint8(img2)
     return open_cv, img2
-
-
-def main():
-    img = cv2.imread('input/coins.jpg', 0)
-    cv2.imshow(img)
-
-
-if __name__ == "__main__":
-    main()

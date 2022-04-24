@@ -138,13 +138,13 @@ def biliteralFilterDemo():
 
 
 def main():
-    conv1Demo()  # Works
-    conv2Demo()  # Works
-    derivDemo()  # Works
-    blurDemo()  # Works
-    edgeDemo()  # Works
+    # conv1Demo()  # Works
+    # conv2Demo()  # Works
+    # derivDemo()  # Works
+    # blurDemo()  # Works
+    # edgeDemo()  # Works
     houghDemo()
-    biliteralFilterDemo()  # Works but need fix like open cv
+    # biliteralFilterDemo()  # Works but need fix like open cv
 
 
 if __name__ == '__main__':
