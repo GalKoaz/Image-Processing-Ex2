@@ -9,6 +9,14 @@ import cv2
 # Python version : '3.8'
 # ---------------------------------------------------------------------------
 
+def myID() -> np.int:
+    """
+    Return my ID (not the friend's ID I copied from)
+    :return: int
+    """
+    return 206260168
+
+
 def conv1D(in_signal: np.ndarray, k_size: np.ndarray) -> np.ndarray:
     """
     Convolve a 1-D array with a given kernel
@@ -38,11 +46,11 @@ def conv2D(in_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     :return: The convolved image
     """
     """
-    First we created a pad: numpy.pad() function is used to pad the Numpy arrays. Sometimes there is a need to 
-    perform padding in Numpy arrays, then numPy.pad() function is used. The function returns the padded array of rank 
-    equal to the given array and the shape will increase according to pad_width. and created a new array of zeros 
-    with the size of the in_image dimensions, for y and x in the in_image we insert to the output array the x of the 
-    flip kernel + y and the x of the flip kernel multiply the flip of the kernel all together with the sum. 
+    First we created a pad: numpy.pad() function is used to pad the Numpy arrays. Sometimes there is a need to
+    perform padding in Numpy arrays, then numPy.pad() function is used. The function returns the padded array of rank
+    equal to the given array and the shape will increase according to pad_width. and created a new array of zeros
+    with the size of the in_image dimensions, for y and x in the in_image we insert to the output array the x of the
+    flip kernel + y and the x of the flip kernel multiply the flip of the kernel all together with the sum.
     """
     image_padded = np.pad(in_image, ((np.flip(kernel)).shape[0] // 2, (np.flip(kernel)).shape[1] // 2), 'edge')
     output = np.zeros((in_image.shape[0], in_image.shape[1]))
@@ -204,30 +212,29 @@ def bilateral_filter_implement(in_image: np.ndarray, k_size: int, sigma_color: f
     :return: OpenCV implementation, my implementation
     """
     """
-    First, we divide the image by 255 and then we make the each pixel to be float32, we create new zero array of 
-    the in_image dimension , we used the GaussianKernel with the k_size and the sigma color, we saved the dimensions 
-    of the in_image. we over the x and y of the image when the range is k_size // 2 and dimension x - dimension y // 
-    2 in each x and y we save the element in x + k_size // 2 + 1, y + k_size // 2 + 1, then we used this array - the 
-    place of the x,y -> k_size // 2 then we used the sigma calculated to each element we multiply the weights of the 
-    gauss kernel and the array we calculated then we sum the values divide the weights then we multiply back with 255
-    then change the elements to uint8 and return the image as we required.
+    First,  we make the each pixel to be float32, we create new zero array of the in_image dimension , we used the 
+    GaussianKernel with the k_size and the sigma space, we saved the dimensions of the in_image. we over the x and y 
+    of the image when the range is k_size // 2 and dimension x - dimension y // 2 in each x and y we save the element 
+    in x + k_size // 2 + 1, y + k_size // 2 + 1, then we used this array - the place of the x,y -> k_size // 2 then 
+    we used the sigma calculated to each element we multiply the weights of the gauss kernel and the array we 
+    calculated then we sum the values divide the weights then we multiply back with 255 then change the elements to 
+    uint8 and return the image as we required.
+    All implements is based on the lecture we have learn and shows in the moodle.
     """
-    open_cv = cv2.bilateralFilter(in_image, k_size, sigma_color, sigma_space, cv2.BORDER_DEFAULT)
-    in_image = in_image / 255
-    in_image = in_image.astype("float32")
-    img2 = np.zeros(in_image.shape)
-    gaussKer = cv2.getGaussianKernel(k_size, sigma_color)
-    sizeX, sizeY = in_image.shape
-    for i in range(k_size // 2, sizeX - k_size // 2):
-        for j in range(k_size // 2, sizeY - k_size // 2):
-            imgS = in_image[i - (k_size // 2): i + (k_size // 2) + 1, j - (k_size // 2): j + (k_size // 2) + 1]
-            imgI = imgS - imgS[k_size // 2, k_size // 2]
-            imgIG = (1 / (math.sqrt(sigma_space) * math.sqrt(2 * math.pi))) * np.exp(
-                -((imgI / math.sqrt(sigma_space)) ** 2) * 0.5)
-            weights = np.multiply(gaussKer, imgIG)
-            vals = np.multiply(imgS, weights)
-            val = np.sum(vals) / np.sum(weights)
-            img2[i, j] = val
-    img2 = img2 * 255
-    img2 = np.uint8(img2)
-    return open_cv, img2
+    open_cv = cv2.bilateralFilter(in_image, k_size, sigma_color, sigma_space)
+    image = np.zeros(in_image.shape)
+    padded_image = cv2.copyMakeBorder(in_image, math.floor(k_size / 2), math.floor(k_size / 2), math.floor(k_size / 2),
+                                      math.floor(k_size / 2), cv2.BORDER_REPLICATE, None, value=0)
+    gaussKer = cv2.getGaussianKernel(k_size, sigma_space)
+    gaussKer = gaussKer.dot(gaussKer.T)
+    for x in np.arange(0, in_image.shape[0], 1).astype(int):
+        for y in np.arange(0, in_image.shape[1], 1).astype(int):
+            pivot_v = in_image[x, y]
+            neighbor_hood = padded_image[x:x + k_size, y:y + k_size]
+            diff = pivot_v - neighbor_hood
+            diff_gau = np.exp(-np.power(diff, 2) / (2 * sigma_color))
+            combo = gaussKer * diff_gau
+            result = combo * neighbor_hood / combo.sum()
+            ans = result.sum()
+            image[x][y] = ans
+    return open_cv, image
